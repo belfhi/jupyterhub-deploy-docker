@@ -36,7 +36,8 @@ c.DockerSpawner.notebook_dir = notebook_dir
 # Mount the real user's Docker volume on the host to the notebook user's
 # notebook directory in the container
 c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
-c.DockerSpawner.extra_create_kwargs.update({ 'volume_driver': 'local' })
+#c.DockerSpawner.extra_create_kwargs.update({ 'driver': 'local' })
+#c.DockerSpawner.extra_create_kwargs.update({ 'volume_driver': 'local' })
 # Remove containers once they are stopped
 c.DockerSpawner.remove_containers = True
 # For debugging arguments passed to spawned containers
@@ -47,13 +48,20 @@ c.JupyterHub.hub_ip = 'jupyterhub'
 c.JupyterHub.hub_port = 8080
 
 # TLS config
+#import socket
+#pub_ip = socket.gethostbyname(socket.gethostname())
+#c.JupyterHub.ip = pub_ip
 c.JupyterHub.port = 443
 c.JupyterHub.ssl_key = os.environ['SSL_KEY']
 c.JupyterHub.ssl_cert = os.environ['SSL_CERT']
 
 # Authenticate users with GitHub OAuth
-c.JupyterHub.authenticator_class = 'oauthenticator.GitHubOAuthenticator'
-c.GitHubOAuthenticator.oauth_callback_url = os.environ['OAUTH_CALLBACK_URL']
+c.JupyterHub.authenticator_class = 'ldapauthenticator.LDAPAuthenticator'
+c.LDAPAuthenticator.server_address = 'it-ldap-slave.desy.de'
+c.LDAPAuthenticator.bind_dn_template = 'uid={username},ou=people,ou=rgy,o=desy,c=de' # from "ldapsearch -x sn=username" result
+c.LDAPAuthenticator.lookup_dn = True
+c.LDAPAuthenticator.use_ssl = False
+c.LDAPAuthenticator.server_port = 1389
 
 # Persist hub data on volume mounted inside container
 data_dir = os.environ.get('DATA_VOLUME_CONTAINER', '/data')
@@ -67,17 +75,14 @@ c.JupyterHub.db_url = 'postgresql://postgres:{password}@{host}/{db}'.format(
     db=os.environ['POSTGRES_DB'],
 )
 
-# Whitlelist users and admins
-c.Authenticator.whitelist = whitelist = set()
+# Whitlelist admins
 c.Authenticator.admin_users = admin = set()
 c.JupyterHub.admin_access = True
 pwd = os.path.dirname(__file__)
-with open(os.path.join(pwd, 'userlist')) as f:
+with open(os.path.join(pwd, 'adminlist')) as f:
     for line in f:
         if not line:
             continue
         parts = line.split()
         name = parts[0]
-        whitelist.add(name)
-        if len(parts) > 1 and parts[1] == 'admin':
-            admin.add(name)
+        admin.add(name)
