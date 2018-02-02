@@ -40,9 +40,7 @@ Key components of this reference deployment are:
 * **Host**: Runs the [JupyterHub components](https://jupyterhub.readthedocs.org/en/latest/getting-started.html#overview)
   in a Docker container on the host.
 
-* **Authenticator**: Uses [OAuthenticator](https://github.com/jupyter/oauthenticator)
-  and [GitHub OAuth](https://developer.github.com/v3/oauth/) to
-  authenticate users.
+* **Authenticator**: Uses [LDAPAuthenticator](https://github.com/jupyter/ldapauthenticator)
 
 * **Spawner**:Uses [DockerSpawner](https://github.com/jupyter/dockerspawner)
   to spawn single-user Jupyter Notebook servers in separate Docker
@@ -106,42 +104,7 @@ certificate and key file in the JupyterHub configuration. To configure:
 
 ## Authenticator setup
 
-This deployment uses GitHub OAuth to authenticate users.
-
-It requires that you create and register a [GitHub OAuth application](https://github.com/settings/applications/new)
-by filling out a form on the GitHub site:
-
-![GitHub OAuth application form](docs/oauth-form.png)
-
-In this form, you will specify the OAuth application's callback URL in
-this format: `https://<myhost.mydomain>/hub/oauth_callback`.
-
-After you submit the GitHub form, GitHub registers your OAuth application and
-assigns a unique Client ID and Client Secret. The Client Secret should be
-kept private.
-
-At JupyterHub's runtime, you must pass the GitHub OAuth Client ID, Client
-Secret and OAuth callback url. You can do this by either:
-
-- setting the `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, and
-  `OAUTH_CALLBACK_URL` environment variables when you run the
-  JupyterHub container, or
-- add them to an `oauth.env` file in the `secrets` directory of this repository.
-  You may need to create both the `secrets` directory and the `oauth.env` file.
-  For example, add the following lines in the `oauth.env` file:
-
-  `oauth.env` file
-  ```
-  GITHUB_CLIENT_ID=<github_client_id>
-  GITHUB_CLIENT_SECRET=<github_client_secret>
-  OAUTH_CALLBACK_URL=https://<myhost.mydomain>/hub/oauth_callback
-  ```
-
-  **Note:** The `oauth.env` file is a special file that Docker Compose uses
-  to lookup environment variables. If you choose to place the GitHub
-  OAuth application settings in this file, you should make sure that the
-  file remains private (be careful to not commit the `oauth.env` file with
-  these secrets to source control).
+This deployment uses the LDAP Plugin to authenticate to the server
 
 
 ## Build the JupyterHub Docker image
