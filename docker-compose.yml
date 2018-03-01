@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 # JupyterHub docker-compose configuration file
-version: "2"
+version: "3.2"
 
 services:
   hub-db:
@@ -34,6 +34,9 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:rw"
       # Bind Docker volume on host for JupyterHub database and cookie secrets
       - "data:${DATA_VOLUME_CONTAINER}"
+      - type: volume
+        source: nfs-share
+        target: /mnt/nfs
     ports:
       - "443:443"
     links:
@@ -63,6 +66,12 @@ volumes:
   db:
     external:
       name: ${DB_VOLUME_HOST}
+  nfs-share:
+      #driver: local
+      driver_opts:
+        type: "nfs"
+        o: "addr=koben-tsvm,soft,nolock,rw"
+        device: ":/nfs4_ostack"
 
 networks:
   default:
